@@ -1,0 +1,102 @@
+<?php
+function calcula_codigos_nulos()
+	{
+				$sql = "SELECT
+				bm.id_bien,
+				bm.fk_subclase,
+				bm.fecha_adquisicion,
+				cd.Centro_Costos,
+				bm.bien_capitalizable
+			FROM
+				bien_mueble bm
+			INNER JOIN
+				cat_dependencia cd ON bm.fk_dependencia_actual = cd.pk_dependencia
+			WHERE
+				bm.codigo_etiqueta IS NULL";
+
+			sc_select(my_data, $sql);
+			if ({my_data} === false)
+			{
+				echo "Access error. Message =". {my_data_erro};
+			}
+			else
+			{
+				while (!{my_data}->EOF)
+				{
+
+
+						$id_bien = {my_data}->fields[0];
+						$id_subclase = {my_data}->fields[1];
+						$fecha = {my_data}->fields[2] ;
+						$area_costos = {my_data}->fields[3];
+						$capitalizable = {my_data}->fields[4];
+
+						if ($area_costos != '00000')
+						{
+						$codigo_etiqueta = calcula_folio($id_subclase,$fecha, $area_costos,$capitalizable);
+
+
+							$sql = "UPDATE bien_mueble SET codigo_etiqueta = '$codigo_etiqueta' WHERE id_bien = $id_bien";
+							echo $sql;
+						sc_exec_sql ($sql, "conn_mysql");
+						}
+					{my_data}->MoveNext();
+				}
+				{my_data}->Close();
+			}
+	}
+	
+	
+	
+function calcula_folio($id_subclase,$fecha, $area_costos,$capitalizable)
+	{
+			$sql = "SELECT fk_clase,numero_subclase FROM cat_clase_subclase WHERE id_subclase = $id_subclase"; 
+			sc_lookup(clases, $sql, "conn_mysql");
+			$codigo_etiqueta = "NULL";
+			$clase = {clases}[0][0];
+			$subclase = {clases}[0][1];
+			$clasesub2 = $clase.$subclase;
+	
+			if ($capitalizable == 'Si')
+				{
+					$capitalizable = '01';
+				}
+				else
+				{
+					$capitalizable = '02';
+				}
+				
+	
+				if ($fecha == 'null')
+				{
+					$fecha = '00000101';
+				}
+			else
+				{
+					$fecha = str_replace("-", "",$fecha);
+				}
+
+				
+	
+				$unico = $clase.$subclase.$fecha.$area_costos;
+				
+				if (strlen($unico) == 18)
+					{
+						
+						$sql = "SELECT IF(MAX(SUBSTR(codigo_etiqueta,19,4))+1 IS NOT NULL,MAX(SUBSTR(codigo_etiqueta,19,4))+1,1) AS consec FROM bien_mueble WHERE SUBSTR(codigo_etiqueta,1,18) = '$unico'";
+						$sql;
+						sc_lookup(consec, $sql, "conn_mysql");
+						
+						$consecutivo = str_pad({consec}[0][0], 4, '0', STR_PAD_LEFT); 
+
+						$codigo_etiqueta = $unico.$consecutivo.$capitalizable;
+					}
+					else
+						{
+							$codigo_etiqueta = substr($codigo_anterior,0,22).$capitalizable;
+						
+						}
+
+		}
+			return $codigo_etiqueta;
+?>
