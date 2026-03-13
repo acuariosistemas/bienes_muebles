@@ -2,7 +2,7 @@ CREATE TABLE `control_impresiones` (
   `id_impresion` INT(11) NOT NULL AUTO_INCREMENT,
   `fk_bien` INT(11) NOT NULL COMMENT 'Relación con el bien mueble',
   `tipo_reporte` CHAR(40) NOT NULL,
-  `fecha_impesion` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(),
+  `fecha_impresion` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(),
   `login_impresion` VARCHAR(190) DEFAULT NULL COMMENT 'Quién solicitó la impresión',
   PRIMARY KEY (`id_impresion`),
   KEY `fk_bien_idx` (`fk_bien`),
